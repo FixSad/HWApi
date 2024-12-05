@@ -1,0 +1,6 @@
+@HWBackend_HostAddress = http://localhost:5262
+
+GET {{HWBackend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
