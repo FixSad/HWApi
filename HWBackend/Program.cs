@@ -12,8 +12,18 @@ builder.Services.AddDbContext<ApplicationDBContext>(options =>
 
 builder.Services.AddControllers();
 
+builder.Services.AddCors(options => 
+{
+    options.AddDefaultPolicy( policy => 
+    {
+        policy.WithOrigins("http://localhost:3000");
+        policy.AllowAnyHeader();
+        policy.AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
-
+app.UseCors();
 app.MapControllers();
 app.Run();
