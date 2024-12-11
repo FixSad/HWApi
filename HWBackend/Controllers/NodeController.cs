@@ -18,6 +18,9 @@ namespace MyApp.Namespace
         {
             try
             {
+                if(node.parentId != "")
+                    Int32.Parse(node.parentId);
+
                 Node tmpNode = new Node{
                     Name = node.name,
                     ParentId = node.parentId
@@ -26,10 +29,10 @@ namespace MyApp.Namespace
                 await _dbContext.Nodes.AddAsync(tmpNode);
                 await _dbContext.SaveChangesAsync();
 
-                return Ok("Node was successfully added");
+                return Ok();
             }
             catch(Exception ex){
-                return BadRequest(ex);
+                return BadRequest(ex.Message);
             }
         }
 
@@ -39,7 +42,34 @@ namespace MyApp.Namespace
             try
             {
                 var nodes = _dbContext.Nodes;
-                return Ok(nodes);
+                var map = new Dictionary<int, TreeNode>();
+                var rootNodes = new List<TreeNode>();
+
+                foreach(var node in nodes)
+                {
+                    var newNode = new TreeNode
+                    {
+                        Id = node.Id,
+                        Name = node.Name,
+                        Children = new List<TreeNode>()
+                    };
+
+                    if (node.ParentId == "")
+                        rootNodes.Add(newNode);
+                    
+                    map[newNode.Id] = newNode;
+                }
+
+                foreach(var node in nodes)
+                {
+                    if (node.ParentId != "")
+                    {
+                        var parentNode = map[int.Parse(node.ParentId)];
+                        parentNode.Children.Add(map[node.Id]);
+                    }
+                }
+
+                return Ok(rootNodes);
             }
             catch(Exception ex)
             {
@@ -62,18 +92,18 @@ namespace MyApp.Namespace
             }
             catch(Exception ex)
             {
+                System.Console.WriteLine("Id " + id);
                 return BadRequest(ex.Message);
             }
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete]
         public async Task<IActionResult> Delete(int id)
         {
             try
             {
-                System.Console.WriteLine(id);
                 var node = _dbContext.Nodes.
-                    Where(n => n.Id == id).FirstOrDefault();
+                    Where(n => n.Id.Equals(id)).FirstOrDefault();
                     
                 if(node == null)
                     return Ok("No node with that id");
